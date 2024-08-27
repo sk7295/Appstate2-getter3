@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App State Getter</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap">
+  <style>
+    body {
+      padding: 20px;
+      background-color: #0e0e0e;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: rgba(26, 26, 26, 0.8);
+      border-radius: 10px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3), 0 6px 6px rgba(0, 0, 0, 0.23);
+      padding: 40px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    h1 {
+      color: #fff;
+      text-align: center;
+    }
+
+    label {
+      color: #ccc;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .centered-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      margin-bottom: 20px;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .centered-input:focus {
+      border-color: violet;
+    }
+
+    .btn-primary {
+      background-color: #808080;
+      border: none;
+      color: #FF0000;
+      padding: 12px 24px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+      text-align: center;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: #666666;
+    }
+
+    .copy-btn {
+      background-color: #808080;
+      color: #FF0000;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    .copy-btn:hover {
+      background-color: #808080;
+    }
+
+    .result-container {
+      position: relative;
+      margin-top: 20px;
+    }
+
+    .result-container pre {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+      word-wrap: break-word;
+    }
+
+    .loading {
+      color: #f0f0f0;
+      text-align: center;
+      font-size: 1.2rem;
+      margin-top: 20px;
+    }
+
+    .footer {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      text-align: center;
+      font-size: 16px;
+      color: red;
+      margin-top: 50px;
+      border-top: 1px solid red;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+    }
+
+    .footer p {
+      margin: 0;
+    }
+
+    .show-password {
+      position: absolute;
+      top: 30%;
+      right: 10px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #ccc;
+    }
+
+    .show-password:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>App State Getter</h1>
+    <form id="appStateForm">
+      <label for="emailOrUid">Email or User ID:</label>
+      <input type="text" id="emailOrUid" class="centered-input" placeholder="Enter your email or user ID..." required>
+
+      <label for="password">Password:</label>
+      <div style="position: relative;">
+        <input type="password" id="password" class="centered-input" placeholder="Enter your password..." required>
+        <span id="showPassword" class="show-password">&#128065;</span>
+      </div>
+
+      <button type="submit" class="btn-primary">Get App State</button>
+    </form>
+    
+    <div id="result" class="result-container"></div>
+    <div id="loading" class="loading" style="display: none;">Please wait...</div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2024 Joshua Apostol. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const appStateForm = document.getElementById('appStateForm');
+      const resultDiv = document.getElementById('result');
+      const loadingDiv = document.getElementById('loading');
+      const passwordInput = document.getElementById('password');
+      const showPasswordBtn = document.getElementById('showPassword');
+
+      appStateForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const emailOrUid = document.getElementById('emailOrUid').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if (!emailOrUid || !password) {
+          alert('Email/User ID and password are required.');
+          return;
+        }
+
+        // Show loading message
+        loadingDiv.style.display = 'block';
+        resultDiv.innerHTML = '';
+
+        try {
+          const response = await fetch(`/appstate?email=${encodeURIComponent(emailOrUid)}&password=${encodeURIComponent(password)}`);
+          if (!response.ok) {
+            throw new Error('Failed to get app state');
+          }
+          const data = await response.json();
+          resultDiv.innerHTML = `
+            <button class="copy-btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+            <pre id="appStateData">${JSON.stringify(data, null, 2)}</pre>
+          `;
+        } catch (error) {
+          console.error('Error getting app state:', error);
+          resultDiv.textContent = 'Failed to get app state. Please try again.';
+        } finally {
+          // Hide loading message
+          loadingDiv.style.display = 'none';
+        }
+      });
+
+      showPasswordBtn.addEventListener('click', () => {
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          showPasswordBtn.textContent = '🙈';
+        } else {
+          passwordInput.type = 'password';
+          showPasswordBtn.textContent = '👁';
+        }
+      });
+
+      window.copyToClipboard = function() {
+        const preElement = document.getElementById('appStateData');
+        const range = document.createRange();
+        range.selectNode(preElement);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+
+        try {
+          document.execCommand('copy');
+          alert('App state copied to clipboard!');
+        } catch (err) {
+          console.error('Failed to copy text:', err);
+          alert('Failed to copy to clipboard.');
+        }
+        
+        window.getSelection().removeAllRanges();
+      };
+    });
+  </script>
+</body>
+</html>
